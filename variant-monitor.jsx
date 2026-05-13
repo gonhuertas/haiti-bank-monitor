@@ -6,7 +6,10 @@
 
 const { useState: useStateM, useMemo: useMemoM, useEffect: useEffectM } = React;
 
-// Brighter palette for the dark theme (overrides bank.color for monitor only)
+// Brighter palette for the dark theme (overrides bank.color for monitor only).
+// Explicit overrides keep the seven legacy tickers visually stable; new banks
+// fall back to a positional palette so the dashboard degrades gracefully if the
+// bank universe ever changes.
 const MONITOR_BANK_COLORS = {
   UNIBK:     "#5aa0ff",
   SOGEBK:    "#e89455",
@@ -16,15 +19,28 @@ const MONITOR_BANK_COLORS = {
   SOGEBL:    "#6cc6e6",
   BPH:       "#b29ddf",
 };
+const PALETTE_FALLBACK = ["#9aa2ad", "#c2855f", "#88b86c", "#a890d4", "#d4a553", "#7a9eb1", "#b56c84"];
 
-function bankColor(ticker) { return MONITOR_BANK_COLORS[ticker] || "#9aa2ad"; }
+function bankColor(ticker) {
+  if (MONITOR_BANK_COLORS[ticker]) return MONITOR_BANK_COLORS[ticker];
+  const idx = window.haitiData?.banks?.findIndex(b => b.ticker === ticker) ?? -1;
+  return idx >= 0 ? PALETTE_FALLBACK[idx % PALETTE_FALLBACK.length] : PALETTE_FALLBACK[0];
+}
 
 function VariantMonitor() {
   const data = window.haitiData;
   const M = window.haitiMonitor;
   const [tab, setTab] = useStateM("pulse");
   const [qIndex, setQIndex] = useStateM(data.N_QUARTERS - 1);
-  const [selectedBank, setSelectedBank] = useStateM("UNIBK");
+  // Default to the largest bank by share-of-system in the latest quarter.
+  // Falls back to the first available bank if no shares are reported.
+  const initialBank = (() => {
+    const ranked = [...data.banks].sort((a, b) =>
+      (b.series[data.N_QUARTERS - 1].share ?? 0) - (a.series[data.N_QUARTERS - 1].share ?? 0)
+    );
+    return ranked[0]?.ticker ?? data.banks[0]?.ticker ?? "";
+  })();
+  const [selectedBank, setSelectedBank] = useStateM(initialBank);
   const [xsMetric, setXsMetric] = useStateM("npl");
   const [tsMetric, setTsMetric] = useStateM("npl");
   const [tsTransform, setTsTransform] = useStateM("level");
@@ -195,7 +211,7 @@ function VariantMonitor() {
         </div>
         <div className="vM-meta">
           <SystemPulseBadge qIndex={qIndex} />
-          <div className="pair"><div className="l">Banks</div><div className="v">7 active</div></div>
+          <div className="pair"><div className="l">Banks</div><div className="v">{data.banks.length} active</div></div>
           <div className="pair"><div className="l">Coverage</div><div className="v">{data.quarters[0].label} → {data.quarters[data.N_QUARTERS - 1].label}</div></div>
           <div className="pair"><div className="l">FX</div><div className="v">{data.fx[qIndex].toFixed(2)} HTG/USD</div></div>
         </div>
@@ -231,7 +247,7 @@ function VariantMonitor() {
       </div>
 
       <div className="vM-foot">
-        <span>Status thresholds derived from regulatory minima + sector historical bands. z-scores computed against trailing 10-year mean.</span>
+        <span>Status thresholds derived from regulatory minima + sector historical bands. z-scores computed against trailing {Math.round(M.LOOKBACK_QUARTERS / 4)}-year mean.</span>
         <span><b>Source</b> · BRH supervisory filings · indicators carry varying coverage</span>
       </div>
     </div>

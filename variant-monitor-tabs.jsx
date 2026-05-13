@@ -500,6 +500,22 @@ function MonitorBank({ selectedBank, setSelectedBank, qIndex, setQIndex, sizeOrd
   const data = window.haitiData;
   const M = window.haitiMonitor;
   const bank = data.banks.find(b => b.ticker === selectedBank);
+
+  // Guard: if the selected ticker is no longer in the dataset (renamed bank,
+  // exited bank, malformed state), bail out cleanly with a recovery action
+  // rather than throwing on `bank.series` below.
+  if (!bank) {
+    return (
+      <div style={{ padding: 40, fontFamily: "var(--mono)", color: "var(--text-dim)" }}>
+        Bank "{selectedBank}" is not in the current dataset.{" "}
+        <a
+          style={{ color: "var(--accent)", cursor: "pointer", textDecoration: "underline" }}
+          onClick={() => setSelectedBank(sizeOrder[0])}
+        >Switch to {sizeOrder[0]}</a>.
+      </div>
+    );
+  }
+
   const s = bank.series[qIndex];
   const sp = bank.series[Math.max(0, qIndex - 4)];
   const cur = data.quarters[qIndex];

@@ -2,6 +2,11 @@
 // Loaded after data.js; expects window.haitiData to be built before any function call.
 
 (function () {
+  // Trailing window (in quarters) used for percentile bands AND z-score baselines.
+  // Single source of truth so the chart bands and the z-scores are computed off
+  // the same history. Update here and the dashboard's "X-year" copy follows.
+  const LOOKBACK_QUARTERS = 40; // 10 years of quarterly data
+
   // Thresholds: { ok: range or threshold for "normal", watch: ..., alert: ... }
   // direction: "high" = higher is better, "low" = lower is better
   const THRESHOLDS = {
@@ -57,7 +62,7 @@
   }
 
   // z-score of a value vs the series' 10y history (last min(N, 40) quarters)
-  function zScore(seriesArr, value, lookback = 40) {
+  function zScore(seriesArr, value, lookback = LOOKBACK_QUARTERS) {
     if (value == null) return null;
     const start = Math.max(0, seriesArr.length - lookback);
     const slice = seriesArr.slice(start).filter(v => v != null && Number.isFinite(v));
@@ -147,7 +152,7 @@
   }
 
   window.haitiMonitor = {
-    THRESHOLDS, statusFor, hhi, ldr, bankLdr,
+    LOOKBACK_QUARTERS, THRESHOLDS, statusFor, hhi, ldr, bankLdr,
     zScore, percentiles, yoyDelta,
     systemSeries, bankSeries,
     fmtPct, fmtBp, fmtPp, fmtBig, fmtZ,

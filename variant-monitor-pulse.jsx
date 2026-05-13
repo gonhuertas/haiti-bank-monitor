@@ -234,14 +234,15 @@ function MonitorPulse({ qIndex, setQIndex, setTab, setSelectedBank, setXsMetric 
       <div className="vM-section-head" style={{ marginTop: 6 }}>
         <span className="num">04</span><span className="lbl">Sector Trends</span>
         <span className="rule" />
-        <span className="sub">10-year quarterly · weighted system aggregates · shaded = current period</span>
+        <span className="sub">{Math.round(M.LOOKBACK_QUARTERS / 4)}-year quarterly · weighted system aggregates · shaded = current period</span>
       </div>
       <div className="vM-trend-grid">
-        <TrendMini metric="npl" label="NPL ratio" fmt={v => v?.toFixed(2) + "%"} qIndex={qIndex} threshold={[5, 10]} dir="low" />
-        <TrendMini metric="car" label="CAR" fmt={v => v?.toFixed(1) + "%"} qIndex={qIndex} threshold={[12, 15]} dir="high" />
-        <TrendMini metric="roa" label="ROA (YTD)" fmt={v => v?.toFixed(2) + "%"} qIndex={qIndex} threshold={[0, 1]} dir="high" />
-        <TrendMini metric="capToAssets" label="Capital / Assets" fmt={v => v?.toFixed(2) + "%"} qIndex={qIndex} threshold={[6, 8]} dir="high" />
-        <TrendMini metric="liqA" label="Liquidity / Assets" fmt={v => v?.toFixed(1) + "%"} qIndex={qIndex} threshold={[15, 25]} dir="high" />
+        {/* Thresholds and direction read from M.THRESHOLDS — single source of truth. */}
+        <TrendMini metric="npl"         label="NPL ratio"            fmt={v => v?.toFixed(2) + "%"} qIndex={qIndex} />
+        <TrendMini metric="car"         label="CAR"                  fmt={v => v?.toFixed(1) + "%"} qIndex={qIndex} />
+        <TrendMini metric="roa"         label="ROA (YTD)"            fmt={v => v?.toFixed(2) + "%"} qIndex={qIndex} />
+        <TrendMini metric="capToAssets" label="Capital / Assets"     fmt={v => v?.toFixed(2) + "%"} qIndex={qIndex} />
+        <TrendMini metric="liqA"        label="Liquidity / Assets"   fmt={v => v?.toFixed(1) + "%"} qIndex={qIndex} />
         <TrendMini metric="totalAssets" label="Total assets (HTG bn)" fmt={v => v == null ? "—" : window.haitiMonitor.fmtBig(v)} qIndex={qIndex} />
       </div>
     </div>
@@ -259,7 +260,7 @@ function IndicatorCard({ ind, qIndex, onClick }) {
   const status = M.statusFor(ind.key, v);
   const thresh = M.THRESHOLDS[ind.key];
   const z = M.zScore(sysArr, v);
-  const pct = M.percentiles(sysArr.slice(Math.max(0, qIndex - 39), qIndex + 1));
+  const pct = M.percentiles(sysArr.slice(Math.max(0, qIndex - (M.LOOKBACK_QUARTERS - 1)), qIndex + 1));
 
   const w = 280, h = 50;
 
@@ -435,15 +436,19 @@ function SystemTotalsCard({ qIndex }) {
 }
 
 // ── Trend mini panel (one indicator) ────────────────────────
-function TrendMini({ metric, label, fmt, qIndex, threshold = null, dir = "high" }) {
+function TrendMini({ metric, label, fmt, qIndex }) {
   const data = window.haitiData;
+  const M = window.haitiMonitor;
   const arr = data.system.map(s => s[metric]);
   const v = arr[qIndex];
   const xLabels = data.quarters.map(q => q.q === 1 ? q.y : "");
 
-  const bands = threshold ? [{
-    from: dir === "high" ? -Infinity : threshold[0],
-    to:   dir === "high" ? threshold[0] : Infinity,
+  // Single source of truth: derive the alert band straight from M.THRESHOLDS.
+  // Metrics without a threshold (e.g. totalAssets) just render with no band.
+  const t = M.THRESHOLDS[metric];
+  const bands = t ? [{
+    from: t.dir === "high" ? -Infinity : t.alert,
+    to:   t.dir === "high" ? t.alert   : Infinity,
     color: "rgba(232,102,94,0.06)",
   }] : [];
 
