@@ -1,74 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Haiti · Banking Sector Monitor</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-<style>
-  :root {
-    /* used by old A variant if loaded; harmless if not */
-    --ed-serif: "Playfair Display", "Times New Roman", serif;
-    --ed-sans: "Inter", system-ui, -apple-system, sans-serif;
-    --ed-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  }
-  html, body {
-    margin: 0; padding: 0;
-    background: #0d0f12;
-    font-family: "Inter", system-ui, sans-serif;
-    color: #e6e9ee;
-    display: flex; justify-content: center;
-    min-height: 100vh;
-  }
-  * { box-sizing: border-box; }
-  #root { width: 1440px; }
-  .vM-loading {
-    color: #d4a553; font-family: "JetBrains Mono", monospace; padding: 60px;
-    font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
-  }
-  .vM-err { color: #e8665e; font-family: "JetBrains Mono", monospace; padding: 60px; }
-</style>
-
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-
-<script src="data.js"></script>
-<script src="monitor-utils.js"></script>
-<script type="text/babel" src="charts.jsx"></script>
-<script type="text/babel" src="variant-monitor.jsx"></script>
-<script type="text/babel" src="variant-monitor-pulse.jsx"></script>
-<script type="text/babel" src="variant-monitor-tabs.jsx"></script>
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1380" />
+  <title>Haiti Banking System Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div id="root"><div class="vM-loading">Loading BRH supervisory data…</div></div>
+  <div id="root"><div style="padding:48px;font-family:'IBM Plex Mono',monospace;color:#6B6655;letter-spacing:0.06em;text-transform:uppercase;font-size:11px">Loading bank data…</div></div>
 
-<script type="text/babel">
-const { useState, useEffect } = React;
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-function App() {
-  const [data, setData] = useState(null);
-  const [err, setErr] = useState(null);
-  useEffect(() => {
-    fetch('haiti-data.json')
-      .then(r => { if (!r.ok) throw new Error('failed to load haiti-data.json'); return r.json(); })
-      .then(raw => {
-        window.haitiData = window.buildHaitiData(raw);
-        setData(window.haitiData);
-      })
-      .catch(e => setErr(e.message));
-  }, []);
-  if (err) return <div className="vM-err">Error · {err}</div>;
-  if (!data) return <div className="vM-loading">Loading BRH supervisory data…</div>;
-  return <VariantMonitor />;
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-</script>
+  <script src="thresholds.js"></script>
+  <script type="text/babel" src="utils.jsx"></script>
+  <script type="text/babel" src="charts.jsx"></script>
+  <script type="text/babel" src="monitor.jsx"></script>
+  <script type="text/babel" src="briefing.jsx"></script>
+  <script type="text/babel" src="asset-quality.jsx"></script>
+  <script type="text/babel" src="credit.jsx"></script>
+  <script type="text/babel" src="fx.jsx"></script>
+  <script type="text/babel" src="bank-deep-dive.jsx"></script>
+  <script type="text/babel" src="methodology.jsx"></script>
+  <script type="text/babel" src="app.jsx"></script>
 </body>
 </html>
