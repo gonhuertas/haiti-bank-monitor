@@ -6,16 +6,48 @@ function QuarterlyBriefing({ asOf, onPickBank }) {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
 
-  // Build context payload from the data, then call Claude.
+  // Resolution order for each asOf quarter:
+  //   1. pre-generated entry in briefings.json (analyst-curated, GitHub-Pages safe)
+  //   2. window.claude.complete (Claude Design preview env only; absent in production)
+  //   3. graceful "not available" message
   React.useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setSummary(null);
     setError(null);
 
-    const ctx = buildBriefingContext(asOf);
+    // Cache briefings.json across re-renders to avoid re-fetching on every asOf change.
+    const cached = window.__BRIEFINGS_PROMISE || (window.__BRIEFINGS_PROMISE =
+      fetch('briefings.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
+    );
 
-    const prompt = `You are an experienced financial-sector analyst writing a quarterly briefing on Haiti's commercial banking system for a peer who already knows the country and the banks. Avoid generic framing ("the banking sector saw…"), avoid restating thresholds, avoid hedging. Be specific: name banks, quote numbers, identify what moved meaningfully.
+    cached.then(briefings => {
+      if (cancelled) return;
+      if (briefings && typeof briefings[asOf] === 'string') {
+        setSummary(briefings[asOf]);
+        setLoading(false);
+        return;
+      }
+      // No pre-generated briefing for this quarter — try the live LLM path.
+      tryLLM();
+    });
+
+    function tryLLM() {
+      if (cancelled) return;
+
+      const llm = window.claude && typeof window.claude.complete === 'function'
+        ? window.claude.complete.bind(window.claude)
+        : null;
+
+      if (!llm) {
+        // No pre-generated briefing AND no LLM — surface a clear message.
+        setError('No briefing on file for this quarter, and no live LLM available in this environment');
+        setLoading(false);
+        return;
+      }
+
+      const ctx = buildBriefingContext(asOf);
+      const prompt = `You are an experienced financial-sector analyst writing a quarterly briefing on Haiti's commercial banking system for a peer who already knows the country and the banks. Avoid generic framing ("the banking sector saw…"), avoid restating thresholds, avoid hedging. Be specific: name banks, quote numbers, identify what moved meaningfully.
 
 WRITE 4–6 sentences in plain prose, no bullets, no headings. Tone: dry, factual, observational. Reference banks by their ticker (UNIBK, SOGEBK, BNC, CAPITALBK, BUH, SOGEBL, CBNA, BPH). Numbers in parentheses where useful, e.g. "(NPL +210 bp to 39.8%)". Lead with the most material developments; close with one watch-item if relevant.
 
@@ -35,29 +67,16 @@ ${ctx.shareLines.join('\n')}
 
 Write the briefing now. Do not preface it with a heading or salutation.`;
 
-    // window.claude.complete is only available inside the Claude Design
-    // preview environment. In production (GitHub Pages, localhost, etc.)
-    // it's undefined. Fall back to a static message until we wire a real
-    // LLM path (pre-generated briefings.json or proxied Anthropic API).
-    const llm = window.claude && typeof window.claude.complete === 'function'
-      ? window.claude.complete.bind(window.claude)
-      : null;
-
-    if (!llm) {
-      setError('LLM not wired up in this environment');
-      setLoading(false);
-      return () => { cancelled = true; };
+      llm(prompt).then(text => {
+        if (cancelled) return;
+        setSummary((text || '').trim());
+        setLoading(false);
+      }).catch(e => {
+        if (cancelled) return;
+        setError(e.message || 'Failed to generate briefing');
+        setLoading(false);
+      });
     }
-
-    llm(prompt).then(text => {
-      if (cancelled) return;
-      setSummary((text || '').trim());
-      setLoading(false);
-    }).catch(e => {
-      if (cancelled) return;
-      setError(e.message || 'Failed to generate briefing');
-      setLoading(false);
-    });
 
     return () => { cancelled = true; };
   }, [asOf]);
