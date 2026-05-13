@@ -18,7 +18,7 @@ from pathlib import Path
 import openpyxl
 
 ROOT = Path(__file__).resolve().parent
-XLSX = ROOT.parent / "brh-dashboard" / "output" / "Financial_Monitoring_2025-12.xlsx"
+XLSX = ROOT.parent / "FM Test" / "brh-dashboard" / "output" / "Financial_Monitoring_2025-12.xlsx"
 OUT = ROOT / "haiti-data.json"
 
 ACTIVE_BANKS = [
