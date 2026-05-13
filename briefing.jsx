@@ -35,7 +35,21 @@ ${ctx.shareLines.join('\n')}
 
 Write the briefing now. Do not preface it with a heading or salutation.`;
 
-    window.claude.complete(prompt).then(text => {
+    // window.claude.complete is only available inside the Claude Design
+    // preview environment. In production (GitHub Pages, localhost, etc.)
+    // it's undefined. Fall back to a static message until we wire a real
+    // LLM path (pre-generated briefings.json or proxied Anthropic API).
+    const llm = window.claude && typeof window.claude.complete === 'function'
+      ? window.claude.complete.bind(window.claude)
+      : null;
+
+    if (!llm) {
+      setError('LLM not wired up in this environment');
+      setLoading(false);
+      return () => { cancelled = true; };
+    }
+
+    llm(prompt).then(text => {
       if (cancelled) return;
       setSummary((text || '').trim());
       setLoading(false);
