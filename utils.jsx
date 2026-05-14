@@ -177,40 +177,6 @@ window.realYoY = function(nominalYoY, dateStr, cpiOverride) {
   return (1 + nominalYoY) / (1 + cpi) - 1;
 };
 
-// ——— Sample FX open-position data (stand-in) ———
-// User will replace with real BRH circulaire 86 monitoring data.
-
-window.SAMPLE_FX_DATA = (function() {
-  // Per-bank quarterly net open FX position as % of regulatory capital
-  // and days-breached count per quarter.
-  // Limit assumed at ±20% (BRH Circulaire 86 typical).
-  const banks = BANK_ORDER.filter(b => b !== "PROMOBK" && b !== "SCOTIA" && b !== "SOCABK" && b !== "BHD");
-  const dates = ["2024-03-31","2024-06-30","2024-09-30","2024-12-31","2025-03-31","2025-06-30","2025-09-30","2025-12-31"];
-
-  // Mostly within limits, some banks pushing edges, occasional breaches
-  const seed = (s) => { let x = s; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; };
-  const out = {};
-  banks.forEach((b, bi) => {
-    out[b] = { positions: [], breachDays: [] };
-    const r = seed((bi + 1) * 173 + 41);
-    let pos = (r() - 0.5) * 0.18;
-    dates.forEach((d, di) => {
-      // random walk with persistence
-      pos = pos * 0.6 + (r() - 0.5) * 0.16;
-      // a few banks get pushed near limits in 2025
-      if (b === "BNC" && di >= 4) pos += 0.06 * (di - 3);
-      if (b === "BUH" && di >= 5) pos += 0.05 * (di - 4);
-      if (b === "BPH" && di >= 6) pos -= 0.08 * (di - 5);
-      pos = Math.max(-0.42, Math.min(0.42, pos));
-      out[b].positions.push({ date: d, value: pos });
-      // breach days
-      const tightness = Math.abs(pos) / 0.20;
-      let days = 0;
-      if (tightness > 1.0) days = Math.round(15 + r() * 50);
-      else if (tightness > 0.85) days = Math.round(r() * 8);
-      else days = 0;
-      out[b].breachDays.push({ date: d, value: days });
-    });
-  });
-  return { banks, dates, data: out, limit: 0.20 };
-})();
+// FX open-position data is now loaded by app.jsx into window.__FX_DATA from
+// fx_data.json (built by build_fx_data.py from the BRH posinette CSV).
+// The previous SAMPLE_FX_DATA placeholder has been removed.

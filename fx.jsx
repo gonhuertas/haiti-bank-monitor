@@ -1,8 +1,26 @@
-// FX Open Positions tab — stand-in data, BRH Circulaire 86 monitoring.
+// FX Open Positions tab — live BRH posinette data, Circulaire 86 monitoring.
+// Data is loaded by app.jsx into window.__FX_DATA and built by
+// build_fx_data.py from FM Test/brh-dashboard/data/processed/brh_fx_positions.csv.
 
 function FxOpenPositions({ asOf, onPickBank }) {
   const T = window.BRH_THRESHOLDS;
-  const fx = window.SAMPLE_FX_DATA;
+  const fx = window.__FX_DATA;
+
+  if (!fx) {
+    return (
+      <div>
+        <div className="section-head">
+          <h2>FX Open Positions</h2>
+          <div className="section-meta" style={{ color: 'var(--red)' }}>fx_data.json unavailable</div>
+        </div>
+        <div className="threshold-block" style={{ background: 'var(--card)', borderLeft: '3px solid var(--red)' }}>
+          <b>FX data not loaded.</b> The dashboard expects <code className="mono">fx_data.json</code> alongside <code className="mono">data.json</code>.
+          Generate it by running <code className="mono">python build_fx_data.py</code> from the repo root after refreshing the upstream BRH pipeline.
+        </div>
+      </div>
+    );
+  }
+
   const limit = fx.limit;
   const dates = fx.dates;
   const banks = fx.banks;
@@ -32,10 +50,6 @@ function FxOpenPositions({ asOf, onPickBank }) {
     <div>
       <div className="lede" style={{ marginBottom: 18 }}>
         Net open FX position per bank, measured against the <strong>BRH Circulaire 86 limit</strong> of {fmt.pct(limit, 0)} of regulatory capital. Includes intra-quarter breach-days where the limit was exceeded on individual reporting days even when the quarter-end print was inside the band.
-      </div>
-
-      <div className="threshold-block" style={{ marginBottom: 20, background: 'var(--card)', borderLeft: '3px solid var(--ink-soft)' }}>
-        <b>Stand-in data.</b> This tab uses synthetic positions and breach-day counts to scaffold the layout. Replace <code className="mono">SAMPLE_FX_DATA</code> in <code className="mono">utils.jsx</code> with the live BRH series; structure and color thresholds will carry over.
       </div>
 
       {/* —— KPI row —— */}

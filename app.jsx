@@ -179,11 +179,16 @@ function ThresholdPanel({ thresholds, setThresholds, onClose }) {
   );
 }
 
-// Bootstrap: fetch data once, then render.
-fetch('data.json')
-  .then(r => r.json())
-  .then(d => {
-    window.__BANK_DATA = d;
+// Bootstrap: fetch core bank data (required) plus FX positions (optional)
+// in parallel, then render. data.json failure aborts; fx_data.json failure
+// is non-fatal — the FX tab will display a clear "data unavailable" state.
+Promise.all([
+  fetch('data.json').then(r => r.ok ? r.json() : Promise.reject('data.json HTTP ' + r.status)),
+  fetch('fx_data.json').then(r => r.ok ? r.json() : null).catch(() => null),
+])
+  .then(([bankData, fxData]) => {
+    window.__BANK_DATA = bankData;
+    window.__FX_DATA   = fxData;   // null if missing/unreadable
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   })
   .catch(e => {
