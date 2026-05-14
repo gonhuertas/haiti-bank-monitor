@@ -117,7 +117,7 @@ function ThresholdPanel({ thresholds, setThresholds, onClose }) {
       { k: 'net_npl_to_equity_breach', label: 'Net NPL/Equity · elevated', unit: '%' }
     ]},
     { title: 'FX', items: [
-      { k: 'fx_open_position_limit', label: 'FX open position · BRH limit', unit: '±%' }
+      { k: 'fx_open_position_limit', label: 'Net structural FX position · Circulaire 81-6 (% of equity)', unit: '±%' }
     ]}
   ];
 

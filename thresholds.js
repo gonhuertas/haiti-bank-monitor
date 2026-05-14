@@ -19,7 +19,7 @@ window.BRH_THRESHOLDS = /*EDITMODE-BEGIN*/{
   "provision_coverage_watch": 1.20,
   "net_npl_to_equity_watch": 0.25,
   "net_npl_to_equity_breach": 0.50,
-  "fx_open_position_limit": 0.20
+  "fx_open_position_limit": 0.005
 }/*EDITMODE-END*/;
 
 // Provenance for each threshold so we can show source next to flags.
@@ -37,7 +37,7 @@ window.THRESHOLD_PROVENANCE = {
   provision_coverage_watch: { label: "Analyst watch — coverage <120%", source: "Convention" },
   net_npl_to_equity_watch:  { label: "IMF FSI — Net NPL/Capital >25%", source: "IMF FSI" },
   net_npl_to_equity_breach: { label: "IMF FSI elevated — Net NPL/Capital >50%", source: "IMF FSI" },
-  fx_open_position_limit:   { label: "BRH Circulaire 86 — net open FX position", source: "BRH" }
+  fx_open_position_limit:   { label: "BRH Circulaire 81-6 — net structural FX open position ≤ 0.50% of equity", source: "BRH" }
 };
 
 // Evaluate a single value against an indicator's threshold structure.

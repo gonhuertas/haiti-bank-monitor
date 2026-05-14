@@ -74,10 +74,13 @@ OUTPUT_JSON = SCRIPT_DIR / "fx_data.json"
 # breach days, so 8 is the natural default.
 N_QUARTERS = 8
 
-# BRH Circulaire 86 limit on net open FX position, as a fraction of
-# regulatory capital. Editable in the dashboard's Thresholds panel; this
-# value is the default the JSON declares for the corridor band.
-REGULATORY_LIMIT = 0.20
+# BRH Circulaire 81-6 (in force since 10 June 2019) limit on the cumulative
+# net structural FX open position, as a fraction of accounting equity.
+# The current regime supersedes Circulaires 81-2 / 81-3 / 81-4 / 81-5 — the
+# posinette sheet header still cites "Circulaire 81-3" but the threshold
+# applied is 81-6's 0.50%. Editable in the dashboard's Thresholds panel;
+# this value is the default the JSON declares for the corridor band.
+REGULATORY_LIMIT = 0.005
 
 # Bank display order — must match `BANK_ORDER` in utils.jsx.
 BANK_ORDER: list[str] = [
@@ -202,13 +205,21 @@ def main() -> None:
     payload = {
         "_meta": {
             "source": "BRH posinette monthly publications, aggregated to quarter-end",
-            "limit_citation": "BRH Circulaire 86 — net open foreign currency position",
+            "limit_citation": (
+                "BRH Circulaire 81-6 (in force 10 June 2019) — cumulative net "
+                "structural FX open position must not exceed 0.50% of accounting "
+                "equity. The position cambiste (intraday trading desk) must be zero "
+                "at end of each business day. Source-sheet header still cites "
+                "Circulaire 81-3, the original framework."
+            ),
             "generated_at": datetime.now().isoformat(timespec="seconds"),
             "n_quarters": N_QUARTERS,
             "aggregation": (
                 "Position = end-of-quarter month value (or latest non-null month "
                 "in the quarter if quarter-end is missing). Breach days = sum of "
-                "monthly counts across the three months in the quarter."
+                "monthly counts across the three months in the quarter. End-of-month "
+                "position can be inside the corridor while breach days > 0 if the "
+                "bank overshot intra-month and closed back within the limit."
             ),
         },
         "limit": REGULATORY_LIMIT,

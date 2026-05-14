@@ -49,7 +49,7 @@ function FxOpenPositions({ asOf, onPickBank }) {
   return (
     <div>
       <div className="lede" style={{ marginBottom: 18 }}>
-        Net open FX position per bank, measured against the <strong>BRH Circulaire 86 limit</strong> of {fmt.pct(limit, 0)} of regulatory capital. Includes intra-quarter breach-days where the limit was exceeded on individual reporting days even when the quarter-end print was inside the band.
+        Net structural FX open position per bank, measured against the <strong>BRH Circulaire 81-6 limit</strong> of {fmt.pct(limit, 2)} of accounting equity (in force since 10 June 2019). Days exceeded counts calendar days in the quarter the bank was non-compliant on a daily basis; end-of-quarter compliance does not imply intra-quarter compliance.
       </div>
 
       {/* —— KPI row —— */}
@@ -60,7 +60,7 @@ function FxOpenPositions({ asOf, onPickBank }) {
           const longest = Math.max(...latestRows.map(r => Math.abs(r.position || 0)));
           const totalDays = latestRows.reduce((a, r) => a + (r.days || 0), 0);
           return [
-            { label: 'Regulatory limit', val: '±' + fmt.pct(limit, 0), sub: 'BRH Circulaire 86', cls: '' },
+            { label: 'Regulatory limit', val: '±' + fmt.pct(limit, 2), sub: 'BRH Circulaire 81-6', cls: '' },
             { label: 'Banks in breach · ' + fmt.qtr(asOf), val: inBreach + '', sub: 'quarter-end print over limit', cls: inBreach > 0 ? 'breach' : 'ok' },
             { label: 'Banks on watch', val: onWatch + '', sub: '≥85% of limit or intra-qtr breach', cls: onWatch > 0 ? 'watch' : 'ok' },
             { label: 'Aggregate breach-days', val: totalDays + '', sub: 'sum across banks this quarter', cls: totalDays > 30 ? 'watch' : 'ok' }
@@ -83,7 +83,7 @@ function FxOpenPositions({ asOf, onPickBank }) {
           </div>
           <FxButterfly rows={sorted} limit={limit} />
           <div className="note" style={{ marginTop: 6 }}>
-            Positive = long FX (typically USD); negative = short FX. The dashed band shows the ±{fmt.pct(limit, 0)} regulatory corridor.
+            Positive = long FX (typically USD); negative = short FX. The dashed band shows the ±{fmt.pct(limit, 2)} regulatory corridor.
           </div>
         </div>
 
@@ -133,7 +133,7 @@ function FxOpenPositions({ asOf, onPickBank }) {
       {/* —— Position trajectories —— */}
       <div className="section-head" style={{ marginTop: 32 }}>
         <h2>Position trajectory · 8 quarters</h2>
-        <div className="section-meta">Each bank vs. ±{fmt.pct(limit, 0)} corridor</div>
+        <div className="section-meta">Each bank vs. ±{fmt.pct(limit, 2)} corridor</div>
       </div>
       <div className="smg cols-3">
         {banks.map(b => {
@@ -160,8 +160,8 @@ function FxOpenPositions({ asOf, onPickBank }) {
       </div>
 
       <div className="threshold-block" style={{ marginTop: 32 }}>
-        <b>BRH Circulaire 86 — Net Open Foreign Currency Position.</b> Commercial banks must keep their net FX position (assets minus liabilities, summed across currencies, in absolute terms) within ±{fmt.pct(limit, 0)} of regulatory capital. Daily-basis monitoring, with prudential sanctions for repeated breaches.
-        <div className="meta">Adjustable in Thresholds panel. Source: BRH Circulaire 86 (placeholder citation).</div>
+        <b>BRH Circulaire 81-6 — Net Open Foreign Currency Position.</b> Commercial banks must keep their cumulative net structural FX position (long + short, balance-sheet only; off-balance-sheet excluded) within ±{fmt.pct(limit, 2)} of accounting equity at all times. The position cambiste (intraday trading-desk position) must be zero at end of each business day. In force since 10 June 2019; supersedes Circulaires 81-2 / 81-3 / 81-4 / 81-5.
+        <div className="meta">Adjustable in Thresholds panel. Source: BRH Circulaire 81-6. Note: source workbook header still cites the older Circulaire 81-3 — but the binding regulatory limit is 81-6's 0.50% structural ceiling.</div>
       </div>
     </div>
   );
@@ -173,8 +173,13 @@ function FxButterfly({ rows, limit }) {
   const width = 540;
   const margin = { top: 18, right: 70, bottom: 28, left: 78 };
   const innerW = width - margin.left - margin.right;
-  const max = Math.max(0.30, ...rows.map(r => Math.abs(r.position || 0)));
+  // Scale floor: at minimum show 8× the regulatory limit so the corridor
+  // remains visible. If any bank is further out, the chart expands to fit.
+  const max = Math.max(limit * 8, ...rows.map(r => Math.abs(r.position || 0)));
   const x = window.linearScale([-max, max], [0, innerW]);
+  // Tick precision: with a 0.5% limit, 0-decimal percentages round 0.5% to "1%".
+  // Use 2 decimals when the limit is small.
+  const tickDp = limit < 0.05 ? 2 : limit < 0.5 ? 1 : 0;
   const bandH = 22;
   const height = margin.top + margin.bottom + rows.length * bandH;
   const innerH = rows.length * bandH;
@@ -186,8 +191,8 @@ function FxButterfly({ rows, limit }) {
         <rect x={x(-limit)} y={0} width={x(limit) - x(-limit)} height={innerH} fill="rgba(31, 58, 95, 0.05)" />
         <line x1={x(-limit)} x2={x(-limit)} y1={0} y2={innerH} className="ref-line" stroke="var(--clay)" />
         <line x1={x(limit)} x2={x(limit)} y1={0} y2={innerH} className="ref-line" stroke="var(--clay)" />
-        <text x={x(limit)} y={-4} textAnchor="middle" className="ref-label" fill="var(--clay-deep)">+{fmt.pct(limit, 0)}</text>
-        <text x={x(-limit)} y={-4} textAnchor="middle" className="ref-label" fill="var(--clay-deep)">−{fmt.pct(limit, 0)}</text>
+        <text x={x(limit)} y={-4} textAnchor="middle" className="ref-label" fill="var(--clay-deep)">+{fmt.pct(limit, tickDp)}</text>
+        <text x={x(-limit)} y={-4} textAnchor="middle" className="ref-label" fill="var(--clay-deep)">−{fmt.pct(limit, tickDp)}</text>
         {/* zero */}
         <line x1={x(0)} x2={x(0)} y1={0} y2={innerH} stroke="var(--ink)" />
         {/* bars */}
@@ -218,7 +223,7 @@ function FxButterfly({ rows, limit }) {
           {[-max, -limit, 0, limit, max].map((t, i) => (
             <g key={i} transform={`translate(${x(t)},0)`}>
               <line y1="0" y2="3" stroke="var(--ink)" />
-              <text y="14" textAnchor="middle">{fmt.pctSigned(t, 0)}</text>
+              <text y="14" textAnchor="middle">{fmt.pctSigned(t, tickDp)}</text>
             </g>
           ))}
         </g>
