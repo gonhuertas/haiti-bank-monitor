@@ -179,16 +179,31 @@ function ThresholdPanel({ thresholds, setThresholds, onClose }) {
   );
 }
 
-// Bootstrap: fetch core bank data (required) plus FX positions (optional)
-// in parallel, then render. data.json failure aborts; fx_data.json failure
-// is non-fatal — the FX tab will display a clear "data unavailable" state.
+// Bootstrap: fetch core bank data (required) plus FX positions and CPI
+// (both optional) in parallel, then render. data.json failure aborts; the
+// other two failing only degrades the relevant tabs.
 Promise.all([
   fetch('data.json').then(r => r.ok ? r.json() : Promise.reject('data.json HTTP ' + r.status)),
   fetch('fx_data.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  fetch('cpi_data.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([bankData, fxData]) => {
+  .then(([bankData, fxData, cpiData]) => {
     window.__BANK_DATA = bankData;
     window.__FX_DATA   = fxData;   // null if missing/unreadable
+    window.__CPI_DATA  = cpiData;  // null if missing/unreadable
+
+    // Build window.CPI_YOY: a quarter-end-keyed map of YoY inflation, used by
+    // realYoY / realRate / Credit Dynamics' real-vs-nominal toggle. Stays as
+    // an empty map if cpi_data.json is missing — every consumer is null-safe.
+    window.CPI_YOY = {};
+    if (cpiData && Array.isArray(cpiData.quarterly)) {
+      cpiData.quarterly.forEach(r => {
+        if (r.inflation_yoy != null) window.CPI_YOY[r.date] = r.inflation_yoy;
+      });
+    }
+    // Backward-compat alias for any code still referencing the old name.
+    window.SAMPLE_CPI_YOY = window.CPI_YOY;
+
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   })
   .catch(e => {

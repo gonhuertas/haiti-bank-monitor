@@ -1,4 +1,6 @@
-// Shared utilities: formatters, data accessors, sample inflation series.
+// Shared utilities: formatters, data accessors, real-rate helpers.
+// Inflation data is loaded by app.jsx from cpi_data.json (real Haiti CPI
+// from the IMF, refreshed via build_cpi_data.py).
 
 // Bank display order + canonical list
 const BANK_ORDER = ["UNIBK", "SOGEBK", "BNC", "CAPITALBK", "BUH", "SOGEBL", "CBNA", "BPH", "BHD", "PROMOBK", "SCOTIA", "SOCABK"];
@@ -154,27 +156,42 @@ window.yoy = function(series) {
   return (last - prev) / Math.abs(prev);
 };
 
-// ——— Sample inflation series (CPI YoY, Haiti) ———
-// Stand-in. Will be replaced with real BRH/IHSI CPI.
-window.SAMPLE_CPI_YOY = {
-  "2017-12-31": 0.135, "2018-03-31": 0.139, "2018-06-30": 0.135,
-  "2018-09-30": 0.138, "2018-12-31": 0.158, "2019-03-31": 0.171,
-  "2019-06-30": 0.196, "2019-09-30": 0.193, "2019-12-31": 0.205,
-  "2020-03-31": 0.220, "2020-06-30": 0.236, "2020-09-30": 0.245,
-  "2020-12-31": 0.215, "2021-03-31": 0.180, "2021-06-30": 0.140,
-  "2021-09-30": 0.105, "2021-12-31": 0.137, "2022-03-31": 0.260,
-  "2022-06-30": 0.290, "2022-09-30": 0.310, "2022-12-31": 0.385,
-  "2023-03-31": 0.493, "2023-06-30": 0.420, "2023-09-30": 0.260,
-  "2023-12-31": 0.227, "2024-03-31": 0.227, "2024-06-30": 0.260,
-  "2024-09-30": 0.270, "2024-12-31": 0.300, "2025-03-31": 0.320,
-  "2025-06-30": 0.340, "2025-09-30": 0.310, "2025-12-31": 0.295
+// ——— Inflation series (CPI YoY, Haiti) ———
+// Real Haiti CPI data is loaded by app.jsx into window.__CPI_DATA (full
+// monthly + quarterly series from the IMF) and window.CPI_YOY (a quarter-end
+// keyed lookup map for convenience). window.SAMPLE_CPI_YOY is kept as an
+// alias for backward compatibility with code that still uses the old name —
+// they point at the same object now.
+//
+// To refresh:  python build_cpi_data.py  → regenerates cpi_data.json from IMF.
+
+// Compute YoY real loan growth from a YoY nominal growth.
+//   real = (1 + nominal) / (1 + inflation) − 1
+// Uses window.CPI_YOY by default; the caller can pass cpiOverride to plug in
+// a manual scenario (used by the inline CPI editor in Credit Dynamics).
+window.realYoY = function(nominalYoY, dateStr, cpiOverride) {
+  const lookup = (cpiOverride && cpiOverride[dateStr] != null)
+    ? cpiOverride[dateStr]
+    : (window.CPI_YOY && window.CPI_YOY[dateStr]);
+  if (lookup == null || nominalYoY == null) return null;
+  return (1 + nominalYoY) / (1 + lookup) - 1;
 };
 
-// Compute YoY real loan growth = (1+nominal) / (1+cpi) - 1
-window.realYoY = function(nominalYoY, dateStr, cpiOverride) {
-  const cpi = (cpiOverride && cpiOverride[dateStr] != null) ? cpiOverride[dateStr] : window.SAMPLE_CPI_YOY[dateStr];
-  if (cpi == null || nominalYoY == null) return null;
-  return (1 + nominalYoY) / (1 + cpi) - 1;
+// Fisher-deflate any nominal annualized rate (ROA, ROE, deposit yield, …)
+// to its real equivalent at the inflation rate prevailing at `dateStr`.
+//   real_rate = (1 + nominal_rate) / (1 + inflation_yoy) − 1
+// Returns null if either input is missing. The rate convention must match —
+// pass annualized YTD ROA against YoY inflation; pass quarterly ROA against
+// the equivalent quarterly inflation if you have it.
+window.realRate = function(nominalRate, dateStr, cpiOverride) {
+  return window.realYoY(nominalRate, dateStr, cpiOverride);
+};
+
+// Look up the YoY inflation rate at any quarter-end date. Returns null if
+// the date isn't in the loaded CPI series. Convenience accessor for charts /
+// briefing / methodology that just want the inflation print.
+window.cpiYoYAt = function(dateStr) {
+  return (window.CPI_YOY && window.CPI_YOY[dateStr] != null) ? window.CPI_YOY[dateStr] : null;
 };
 
 // FX open-position data is now loaded by app.jsx into window.__FX_DATA from

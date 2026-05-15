@@ -1,2 +1,7 @@
 ﻿.fx_cache.json
+.cpi_cache.json
 __pycache__/
+
+# Audit infrastructure outputs (regenerable from data/raw/ via audit/run.py)
+audit/data/
+audit/findings/
