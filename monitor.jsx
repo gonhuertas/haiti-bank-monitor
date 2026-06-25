@@ -7,11 +7,14 @@ const { useState: _useStateM, useMemo: _useMemoM } = React;
 function SystemMonitor({ asOf, onPickBank, onNavTab }) {
   const T = window.BRH_THRESHOLDS;
 
-  // —— KPI strip: 4 indicators ——
-  const carData = window.bankSeries('car', SYSTEM_KEY);
-  const nplData = window.bankSeries('npl_ratio', SYSTEM_KEY);
-  const liqData = window.bankSeries('liquidity_to_deposits', SYSTEM_KEY);
-  const roeData = window.bankSeries('roe', SYSTEM_KEY);
+  // —— KPI strip: 4 indicators, trimmed to the selected as-of date ——
+  // Filter to observations on or before asOf so the headline value, QoQ delta,
+  // sparkline, and the trajectory cards below all reflect the dropdown choice.
+  const trimToAsOf = arr => arr.filter(d => d.date <= asOf);
+  const carData = trimToAsOf(window.bankSeries('car', SYSTEM_KEY));
+  const nplData = trimToAsOf(window.bankSeries('npl_ratio', SYSTEM_KEY));
+  const liqData = trimToAsOf(window.bankSeries('liquidity_to_deposits', SYSTEM_KEY));
+  const roeData = trimToAsOf(window.bankSeries('roe', SYSTEM_KEY));
 
   const kpis = [
     { key: 'car', label: 'System Capital Adequacy', data: carData, format: v => fmt.pct(v, 1),

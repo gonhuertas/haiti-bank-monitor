@@ -74,7 +74,7 @@ function AssetQuality({ asOf, onPickBank }) {
               { value: T.npl_breach, label: `Elevated ${fmt.pct(T.npl_breach, 0)}`, color: 'var(--red)' }
             ]}
             width={620} height={240}
-            yFormat={v => fmt.pct(v, 0)}
+            yFormat={v => fmt.pct(v, 1)}
             xTickEvery={4}
           />
           <div className="note">Loan-weighted system NPL ratio. Source: BRH quarterly aggregates.</div>
