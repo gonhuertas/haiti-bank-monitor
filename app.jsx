@@ -201,8 +201,6 @@ Promise.all([
         if (r.inflation_yoy != null) window.CPI_YOY[r.date] = r.inflation_yoy;
       });
     }
-    // Backward-compat alias for any code still referencing the old name.
-    window.SAMPLE_CPI_YOY = window.CPI_YOY;
 
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   })

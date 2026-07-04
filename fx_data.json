@@ -2,7 +2,7 @@
   "_meta": {
     "source": "BRH posinette monthly publications, aggregated to quarter-end",
     "limit_citation": "BRH Circulaire 81-6 (in force 10 June 2019) \u2014 cumulative net structural FX open position must not exceed 0.50% of accounting equity. The position cambiste (intraday trading desk) must be zero at end of each business day. Source-sheet header still cites Circulaire 81-3, the original framework.",
-    "generated_at": "2026-06-24T19:20:26",
+    "generated_at": "2026-07-04T17:09:35",
     "n_quarters": 8,
     "aggregation": "Position = end-of-quarter month value (or latest non-null month in the quarter if quarter-end is missing). Breach days = sum of monthly counts across the three months in the quarter. End-of-month position can be inside the corridor while breach days > 0 if the bank overshot intra-month and closed back within the limit."
   },

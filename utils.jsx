@@ -158,10 +158,9 @@ window.yoy = function(series) {
 
 // ——— Inflation series (CPI YoY, Haiti) ———
 // Real Haiti CPI data is loaded by app.jsx into window.__CPI_DATA (full
-// monthly + quarterly series from the IMF) and window.CPI_YOY (a quarter-end
-// keyed lookup map for convenience). window.SAMPLE_CPI_YOY is kept as an
-// alias for backward compatibility with code that still uses the old name —
-// they point at the same object now.
+// monthly + quarterly series from the IMF — Haiti's headline IHSI IPC, base
+// 2017–18 = 100) and window.CPI_YOY (a quarter-end-keyed map of YoY inflation
+// used to deflate nominal changes to real).
 //
 // To refresh:  python build_cpi_data.py  → regenerates cpi_data.json from IMF.
 

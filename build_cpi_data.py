@@ -54,6 +54,7 @@ Refresh workflow:
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from datetime import datetime, timedelta
@@ -182,7 +183,12 @@ def filter_quarterly(records: list[dict]) -> list[dict]:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    if _cache_is_fresh():
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--force", action="store_true",
+                    help="Ignore the cache and refetch from the IMF even if the cache is fresh.")
+    args = ap.parse_args()
+
+    if not args.force and _cache_is_fresh():
         print(f"Using cache {CACHE_FILE.name} (less than {CACHE_MAX_AGE_DAYS} days old)")
         records = _load_cache()
         if records is None:
@@ -190,7 +196,8 @@ def main() -> None:
             records = fetch_haiti_cpi_from_imf()
             _save_cache(records)
     else:
-        print(f"Cache missing or stale; fetching from IMF SDMX ...")
+        reason = "forced refetch (--force)" if args.force else "cache missing or stale"
+        print(f"{reason}; fetching from IMF SDMX ...")
         records = fetch_haiti_cpi_from_imf()
         _save_cache(records)
         print(f"  saved cache to {CACHE_FILE.name}")

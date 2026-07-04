@@ -84,10 +84,10 @@ function Methodology() {
           </div>
           <div style={{ fontFamily: 'var(--serif)', fontSize: 13.5, lineHeight: 1.55, color: 'var(--ink-mid)' }}>
             <p><strong>Primary.</strong> Banque de la République d'Haïti (BRH) — quarterly bank statistics, parsed from the published <em>Indicateurs Financiers du Secteur Bancaire</em> bulletins via <code className="mono">parse_brh_*.py</code>.</p>
-            <p><strong>Currency.</strong> All HTG figures are nominal book values in billions of gourdes. Use the <em>Real</em> toggle in the Credit Dynamics tab to deflate by CPI YoY; the CPI series is currently a placeholder.</p>
+            <p><strong>Currency.</strong> All HTG figures are nominal book values in billions of gourdes. Use the <em>Real</em> toggle in the Credit Dynamics tab to deflate by CPI YoY; the CPI series is Haiti's headline consumer price index (IHSI <em>IPC</em>, base 2017–18 = 100), obtained from the IMF and refreshed alongside the bank data.</p>
             <p><strong>Fiscal year.</strong> Haitian fiscal year ends 30 September. ROA and ROE are cumulative within the fiscal year — Q1 = December, Q4 = September.</p>
             <p><strong>System aggregates.</strong> Two flavours are reported: the simple <em>SYSTÈME</em> column (sum/mean across banks per BRH conventions) and asset- or RWA-weighted aggregates (<em>SYSTÈME (weighted)</em>) where the bulletin provides them.</p>
-            <p><strong>FX open positions.</strong> Stand-in only — wire to the BRH daily monitoring file when available.</p>
+            <p><strong>FX open positions.</strong> Net structural FX position vs. the BRH Circulaire 81-6 limit (0.50% of equity), parsed from the BRH <em>posinette</em> tables via <code className="mono">parse_brh_fx.py</code>.</p>
           </div>
         </div>
       </div>

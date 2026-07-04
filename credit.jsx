@@ -25,7 +25,7 @@ function CreditDynamics({ asOf, onPickBank }) {
       if (prev != null && prev > 0 && cur != null) {
         const nom = (cur - prev) / prev;
         if (real) {
-          const cpi = (cpiOverride && cpiOverride[s[i].date] != null) ? cpiOverride[s[i].date] : window.SAMPLE_CPI_YOY[s[i].date];
+          const cpi = (cpiOverride && cpiOverride[s[i].date] != null) ? cpiOverride[s[i].date] : window.CPI_YOY[s[i].date];
           if (cpi == null) continue;
           out.push({ date: s[i].date, value: (1 + nom) / (1 + cpi) - 1 });
         } else {
@@ -111,8 +111,7 @@ function CreditDynamics({ asOf, onPickBank }) {
 
       {realMode && (
         <div className="threshold-block" style={{ marginBottom: 16 }}>
-          <b>Real growth — sample CPI in use.</b> Values shown are nominal YoY deflated by CPI: <i>(1 + nominal) / (1 + CPI) − 1</i>.
-          The CPI series here is illustrative; replace with the actual BRH/IHSI CPI when available.
+          <b>Real growth — CPI-deflated.</b> Nominal YoY loan growth deflated by Haiti's headline consumer price index (IHSI <i>IPC</i>, base 2017–18 = 100, obtained via the IMF): <i>(1 + nominal) / (1 + CPI&nbsp;YoY) − 1</i>. Open the CPI editor to run an alternative-inflation scenario.
         </div>
       )}
 
@@ -169,7 +168,7 @@ function CreditDynamics({ asOf, onPickBank }) {
       {/* —— Footnote —— */}
       <div className="threshold-block" style={{ marginTop: 32 }}>
         <b>Reading the panels.</b> A bank "pulling back" shows red YoY growth in panel 1 and a falling Loans/Assets in panel 2. A bank "re-igniting" shows positive YoY growth and rising Loans/Assets. Share-drift in panel 3 is the consequence in competitive terms — watch for sustained 50+ basis-point moves over a year.
-        <div className="meta">Source: BRH quarterly. YoY = same quarter last year. {realMode ? 'CPI source: sample (placeholder).' : ''}</div>
+        <div className="meta">Source: BRH quarterly. YoY = same quarter last year. {realMode ? 'CPI: IHSI IPC (base 2017–18 = 100), via IMF.' : ''}</div>
       </div>
     </div>
   );
@@ -177,10 +176,10 @@ function CreditDynamics({ asOf, onPickBank }) {
 
 // —— CPI editor ——
 function CpiEditor({ cpiOverride, setCpiOverride }) {
-  const dates = Object.keys(window.SAMPLE_CPI_YOY).sort().slice(-12);
+  const dates = Object.keys(window.CPI_YOY).sort().slice(-12);
   const [local, setLocal] = React.useState(() => {
     const o = {};
-    dates.forEach(d => o[d] = (cpiOverride && cpiOverride[d] != null) ? cpiOverride[d] : window.SAMPLE_CPI_YOY[d]);
+    dates.forEach(d => o[d] = (cpiOverride && cpiOverride[d] != null) ? cpiOverride[d] : window.CPI_YOY[d]);
     return o;
   });
   return (
@@ -200,7 +199,7 @@ function CpiEditor({ cpiOverride, setCpiOverride }) {
       </div>
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
         <button className="bank-chip on" onClick={() => setCpiOverride({ ...local })}>Apply</button>
-        <button className="bank-chip" onClick={() => setCpiOverride(null)}>Reset to sample</button>
+        <button className="bank-chip" onClick={() => setCpiOverride(null)}>Reset to actual CPI</button>
       </div>
     </div>
   );

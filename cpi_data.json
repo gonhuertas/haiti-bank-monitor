@@ -1,9 +1,9 @@
 {
   "_meta": {
     "source": "IMF SDMX dataset 'CPI', key 'HTI.CPI._T.IX.M' (Haiti, all-items CPI, monthly).",
-    "fetched_at": "2026-06-24T19:20:31",
+    "fetched_at": "2026-07-04T17:09:46",
     "transformation": "inflation_yoy = (cpi_index[t] / cpi_index[t-12]) - 1, expressed as a decimal (0.30 = 30%). null for the first 12 months where no t-12 partner exists.",
-    "monthly_count": 196,
+    "monthly_count": 197,
     "quarterly_count": 65,
     "cache_ttl_days": 30
   },
@@ -987,6 +987,11 @@
       "date": "2026-04-30",
       "cpi_index": 610.5,
       "inflation_yoy": 0.2096294828611056
+    },
+    {
+      "date": "2026-05-31",
+      "cpi_index": 617.9,
+      "inflation_yoy": 0.1998058252427184
     }
   ],
   "quarterly": [
