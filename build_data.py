@@ -24,7 +24,7 @@ Mappings (verified against the prior data.json for 2025-12-31):
   liquidity_to_assets      = bal.liquidity_to_assets                              (ratio)
   liquidity_to_deposits    = bal.liquidity_to_deposits                            (ratio)
   npl_ratio                = ratios.npl_ratio_gross                               (ratio)
-  provision_coverage       = ratios.provision_coverage / 100                      (ratio)
+  provision_coverage       = ratios.provision_coverage                            (multiple)
   net_npl_to_equity        = ratios.net_npl_to_equity                             (ratio)
   roa                      = ratios.roa_cumul                                     (ratio)
   roe                      = ratios.roe_cumul                                     (ratio)
@@ -158,7 +158,8 @@ def main() -> None:
     car                = _pivot(cap, "car")
 
     npl_ratio          = _pivot(ratios, "npl_ratio_gross")
-    prov_cov           = _pivot(ratios, "provision_coverage", scale=0.01)
+    # CSV already stores this as a multiple of NPLs (provisions / NPLs), not a percent
+    prov_cov           = _pivot(ratios, "provision_coverage")
     net_npl_to_eq      = _pivot(ratios, "net_npl_to_equity")
     roa_c              = _pivot(ratios, "roa_cumul")
     roe_c              = _pivot(ratios, "roe_cumul")
